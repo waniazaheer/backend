@@ -98,87 +98,90 @@ const getAuth = async (req, res) => {
       res.status(500).json({msg:'server error',error})
     }
    };
-//    const forgetPassword = async (req, res)=>{
-//     try {
-//         const {email} = req.body;
-//         const isUserExist = await authModel.findOne({email})
-//         if (!isUserExist) {  
-//                 return res.status(404).json({
-//                 msg:"email not found"
-//             });
-//         }
-//         const transporter = nodemailer.createTransport({
-//             service: "gmail",
-//             auth: {
-//               user: process.env.SMTP_EMAIL,
-//               pass: process.env.SMTP_PASSWORD,
-//             },
-//             logger: true,
-//             debug: true,
-//           });
-          
-//           const info = await transporter.sendMail({
-//             from: '"wania 👻" <waniawania430@gmail.com>', // sender address
-//             to: "email", // list of receivers
-//             subject: "Testing", // Subject line
-//             text: "Testing studentProject", // plain text body
-//             html: `<b>Click here to reset your password</b><a href='http://localhost:5000/register>link</a>`, // html body
-//           });
-//           console.log('info') 
-//           res.status(200).json({
-//             msg: 'check your email',
-//             info
-//           })
+// const forgetPassword = async (req, res) => {
+//   try {
+//     const { Email } = req.body;
+//     const validateEmail = (email) => {
+//       const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//       return re.test(email);
+//     };
+
+//     if (!validateEmail(Email)) {
+//       return res.status(400).json({ msg: "Invalid email format" });
 //     }
-//     catch (error) {
-//         res.status(500).json({msg:'server error',error})
-//       }
-// }
+//     const isUserExist = await authModel.findOne({ Email });
+//     if (!isUserExist) {
+//       return res.status(404).json({ msg: "Email not found" });
+//     }
+//     const transporter = nodemailer.createTransport({
+//       service: "gmail",
+//       auth: {
+//         user: process.env.SMTP_EMAIL, 
+//         pass: process.env.SMTP_PASSWORD, 
+//       },
+//     });
+//     const info = await transporter.sendMail({
+//       from: `"Your App Name 👻" <${process.env.SMTP_EMAIL}>`,
+//       to: Email, 
+//       subject: "Password Reset Request",
+//       text: "Click the link below to reset your password.", 
+//       html: `
+//         <b>Click here to reset your password:</b><br>
+//         <a href='http://localhost:5000/reset-password'>Reset Password</a>
+//       `, 
+//     });
+
+//     console.log("Email sent:", info.messageId);
+
+//     res.status(200).json({
+//       msg: "Check your email for the reset link.",
+//       info,
+//     });
+//   } catch (error) {
+//     console.error("Error in forgetPassword:", error);
+//     res.status(500).json({ msg: "Server error", error });
+//   }
+// };
+
+const JWT_SECRET = "your-secret-key";
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: process.env.SMTP_EMAIL,
+    pass: process.env.SMTP_PASSWORD, 
+  },
+});
 const forgetPassword = async (req, res) => {
+  const { Email } = req.body;
+  const user = await authModel.findOne({ Email });
+  if (!user) {
+    return res.status(404).send("User not found");
+  }
+
+  const token = jwt.sign({ Email }, JWT_SECRET, { expiresIn: "1h" });
+
+  const link = `http://localhost:3000/reset-password/${token}`;
+  await transporter.sendMail({
+    from: "your-email@gmail.com",
+    to: Email,
+    subject: "Password Reset",
+    text: `Click here to reset your password: ${link}`,
+  });
+
+  res.send("Password reset link sent to your email.");
+};
+const resetpassword = async (req, res) => {
+  const { token } = req.params;
+  const { Password } = req.body;
+
   try {
-    const { Email } = req.body;
-    const validateEmail = (email) => {
-      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return re.test(email);
-    };
+    const { Email } = jwt.verify(token, JWT_SECRET);
+    const hashedPassword = await bcrypt.hash(Password, 10);
+    await authModel.updateOne({ Email }, { Password: hashedPassword });
 
-    if (!validateEmail(Email)) {
-      return res.status(400).json({ msg: "Invalid email format" });
-    }
-    const isUserExist = await authModel.findOne({ Email });
-    if (!isUserExist) {
-      return res.status(404).json({ msg: "Email not found" });
-    }
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.SMTP_EMAIL, 
-        pass: process.env.SMTP_PASSWORD, 
-      },
-    });
-    const info = await transporter.sendMail({
-      from: `"Your App Name 👻" <${process.env.SMTP_EMAIL}>`,
-      to: Email, 
-      subject: "Password Reset Request",
-      text: "Click the link below to reset your password.", 
-      html: `
-        <b>Click here to reset your password:</b><br>
-        <a href='http://localhost:5000/reset-password'>Reset Password</a>
-      `, 
-    });
-
-    console.log("Email sent:", info.messageId);
-
-    res.status(200).json({
-      msg: "Check your email for the reset link.",
-      info,
-    });
-  } catch (error) {
-    console.error("Error in forgetPassword:", error);
-    res.status(500).json({ msg: "Server error", error });
+    res.send("Password reset successful.");
+  } catch (err) {
+    res.status(400).send("Invalid or expired token.");
   }
 };
-
-
-
-module.exports = {register,login,getAuth,deleteAuth,forgetPassword}
+module.exports = {register,login,getAuth,deleteAuth,forgetPassword, resetpassword}
