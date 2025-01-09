@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const adminSchema = new mongoose.Schema({
+const authSchema = new mongoose.Schema({
 
     Name:{
         type:String,
@@ -14,7 +14,6 @@ const adminSchema = new mongoose.Schema({
         type:Number,
         require:[true,'phone_num is require filed']
     },
-
     Password:{
         type:String,
         required:[true,'Password is equired field'],
@@ -23,8 +22,14 @@ const adminSchema = new mongoose.Schema({
     image:{
         type:String,
         require:[true,'image is required filed ']
-    }
+    },
 
+    jobsApplied: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Jobs',
+        }
+    ]
 })
-const adminModel = mongoose.model('admin',adminSchema)
-module.exports = adminModel
+const authModel = mongoose.model('auth',authSchema)
+module.exports = authModel

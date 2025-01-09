@@ -98,51 +98,6 @@ const getAuth = async (req, res) => {
       res.status(500).json({msg:'server error',error})
     }
    };
-// const forgetPassword = async (req, res) => {
-//   try {
-//     const { Email } = req.body;
-//     const validateEmail = (email) => {
-//       const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//       return re.test(email);
-//     };
-
-//     if (!validateEmail(Email)) {
-//       return res.status(400).json({ msg: "Invalid email format" });
-//     }
-//     const isUserExist = await authModel.findOne({ Email });
-//     if (!isUserExist) {
-//       return res.status(404).json({ msg: "Email not found" });
-//     }
-//     const transporter = nodemailer.createTransport({
-//       service: "gmail",
-//       auth: {
-//         user: process.env.SMTP_EMAIL, 
-//         pass: process.env.SMTP_PASSWORD, 
-//       },
-//     });
-//     const info = await transporter.sendMail({
-//       from: `"Your App Name 👻" <${process.env.SMTP_EMAIL}>`,
-//       to: Email, 
-//       subject: "Password Reset Request",
-//       text: "Click the link below to reset your password.", 
-//       html: `
-//         <b>Click here to reset your password:</b><br>
-//         <a href='http://localhost:5000/reset-password'>Reset Password</a>
-//       `, 
-//     });
-
-//     console.log("Email sent:", info.messageId);
-
-//     res.status(200).json({
-//       msg: "Check your email for the reset link.",
-//       info,
-//     });
-//   } catch (error) {
-//     console.error("Error in forgetPassword:", error);
-//     res.status(500).json({ msg: "Server error", error });
-//   }
-// };
-
 const JWT_SECRET = "your-secret-key";
 const transporter = nodemailer.createTransport({
   service: "Gmail",
@@ -184,4 +139,5 @@ const resetpassword = async (req, res) => {
     res.status(400).send("Invalid or expired token.");
   }
 };
+
 module.exports = {register,login,getAuth,deleteAuth,forgetPassword, resetpassword}
