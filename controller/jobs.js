@@ -1,26 +1,19 @@
 const authModel = require('../models/Auth.model');
 const jobsModel = require('../models/jobs.moodels');
+
     const createJobs = async (req, res) => {
         try {
-            const { title, company, location, salary, description, requirements, additionalNotes } = req.body;
-            const { authId } = req.params;
-            const auth = await authModel.findById(authId);
-            if (!auth) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Auth not found',
-                });
-            }
-            const job = await jobsModel.create({
-                title,
-                company,
-                location,
-                salary,
-                description,
-                requirements,
-                additionalNotes,
-                auth: auth._id,
-            });
+            // const { title, company, location, salary, description, requirements, additionalNotes } = req.body;
+            req.body.createdBy = req.user.userId
+            console.log("req.user.userId", req.user.userId)
+            // const auth = await authModel.findById(authId);
+            // if (!auth) {
+            //     return res.status(404).json({
+            //         success: false,
+            //         message: 'Auth not found',
+            //     });
+            // }
+            const job = await jobsModel.create(req.body);
     
             res.status(201).json({
                 success: true,
@@ -33,53 +26,37 @@ const jobsModel = require('../models/jobs.moodels');
             });
         }
     };
-    
-//     try {
-//         const { title, company, location, salary, description, requirements, additionalNotes } = req.body;
-//         const { authId } = req.params;
-//         const auth = await authModel.findById(authId);
-//         if (!auth) {
-//             return res.status(404).json({ 
-//                 success: false,
-//                 message: 'auth not found'
-//              });
-//         }
-//         const jobs = await jobsModel.create({
-//             title,
-//             company,
-//             location,
-//             salary,
-//             description,
-//             requirements,
-//             additionalNotes,
-//         });
-
-//     res.status(201).json({
-//         success:true,
-//         jobs,
-
-//     })        
-// } catch (error) {
-//     res.status(500).json({
-//         success:false,
-//         error
-//     })
-// } 
-// };
-const getJobs = async (req, res) => {
-    const { location, company } = req.query;
-    const filter = {};
-    if (location) filter.location = location;
-    if (company) filter.company = company;
-
+const getJobs = async (req, res) => { 
     try {
-        const jobs = await jobsModel.find(filter);
-        res.status(200).json({ success: true, jobs });
+        const { userId } = req.query; 
+
+        if (!userId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'User ID is required' 
+            });
+        }
+        const jobs = await jobsModel.find({ createdBy: userId });
+
+        if (jobs.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No jobs found for this user',
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            jobs,
+        });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message,
+        });
     }
 };
-
 const getSingleJobs = async (req ,res) => {
     const {id} = req.params;
     console.log(id)
@@ -97,6 +74,7 @@ const getSingleJobs = async (req ,res) => {
          error
         })
     }}
+    
     const updateJobs = async (req, res) => {
         const { id } = req.params;
         const body = req.body;
@@ -124,7 +102,7 @@ const getSingleJobs = async (req ,res) => {
         const {id} =req.params;
         console.log(id)
         try {
-          const jobs = await jobsModels.findByIdAndDelete(id);
+          const jobs = await jobsModel.findByIdAndDelete(id);
           if(!jobs) return res.status(404).json({msg:'jobs not found'});
           res.status(200).json({
             message:`jobs with this ${id} Deleted successfully`,
@@ -137,5 +115,5 @@ const getSingleJobs = async (req ,res) => {
         })
         }
        };
-        
+
 module.exports = {createJobs, getJobs, getSingleJobs,deleteJobs, updateJobs}

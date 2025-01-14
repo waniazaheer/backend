@@ -1,4 +1,5 @@
-require('dotenv').config()
+require('dotenv').config();
+
 const express = require('express')
 const connectDB = require('./database/db')
 const router = require('./routes/Auth.route')
@@ -8,6 +9,13 @@ const app = express()
 const port = process.env.PORT
 connectDB()
 app.use (express.json() )
+const cors = require('cors');
+app.use(cors({
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
+
 app.use('/', router)
 app.use('/', authenticate, jobsrouter)
 

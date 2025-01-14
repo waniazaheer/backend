@@ -21,15 +21,8 @@ const authSchema = new mongoose.Schema({
     },
     image:{
         type:String,
-        require:[true,'image is required filed ']
+        // require:[true,'image is required filed ']
     },
-
-    jobsApplied: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Jobs',
-        }
-    ]
 })
 const authModel = mongoose.model('auth',authSchema)
 module.exports = authModel
