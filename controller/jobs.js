@@ -1,20 +1,10 @@
 const authModel = require('../models/Auth.model');
-const jobsModel = require('../models/jobs.moodels');
-
+const jobsModel = require('../models/jobs.moodels'); 
     const createJobs = async (req, res) => {
         try {
-            // const { title, company, location, salary, description, requirements, additionalNotes } = req.body;
             req.body.createdBy = req.user.userId
             console.log("req.user.userId", req.user.userId)
-            // const auth = await authModel.findById(authId);
-            // if (!auth) {
-            //     return res.status(404).json({
-            //         success: false,
-            //         message: 'Auth not found',
-            //     });
-            // }
             const job = await jobsModel.create(req.body);
-    
             res.status(201).json({
                 success: true,
                 job,
@@ -26,42 +16,42 @@ const jobsModel = require('../models/jobs.moodels');
             });
         }
     };
-const getJobs = async (req, res) => { 
-    try {
-        const { userId } = req.query; 
-
-        if (!userId) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'User ID is required' 
-            });
-        }
-        const jobs = await jobsModel.find({ createdBy: userId });
-
-        if (jobs.length === 0) {
-            return res.status(404).json({
+    const getJobs = async (req, res) => { 
+        try {
+            const page = Number(req.query.page)|| 1
+            const limit = Number(req.query.limit)|| 2
+            const skip = (page - 1) * limit; 
+            const jobs = await jobsModel
+                .find({ createdBy: req.user.userId })
+                .skip(skip)
+                .limit(limit); 
+            const totalJobs = await jobsModel.countDocuments({ createdBy: req.user.userId });
+    
+            if (jobs.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No jobs found for this user',
+                });
+            }
+            res.status(200).json({
+                success: true,
+                totalJobs,
+                currentPage: Number(page),
+                totalPages: Math.ceil(totalJobs / limit),
+                jobs,            });
+        } catch (error) {
+            res.status(500).json({
                 success: false,
-                message: 'No jobs found for this user',
+                message: 'Server error',
+                error: error.message,
             });
         }
-
-        res.status(200).json({
-            success: true,
-            jobs,
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Server error',
-            error: error.message,
-        });
-    }
-};
+    };
 const getSingleJobs = async (req ,res) => {
     const {id} = req.params;
     console.log(id)
     try {
-        const jobs = await jobsModels.findById(id);
+        const jobs = await jobsModel.findById(id);
         if (!jobs){ 
             return res.status(404).json({
                 msg: 'jobs not found'

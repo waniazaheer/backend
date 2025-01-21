@@ -34,10 +34,18 @@ const register = async (req, res) => {
 
     const token = jwt.sign({ Email: newUser.Email, id: newUser._id }, JWT_SECRET, { expiresIn: '12h' });
 
-    res.status(201).json({ success: true, user: newUser, token });
+    res.status(201).json({ 
+      success: true, 
+      user: newUser,
+       token
+       });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, msg: "Internal Server Error", error });
+    res.status(500).json({ 
+      success: false,
+       msg: "Internal Server Error",
+        error
+       });
   }
 };
 
@@ -121,15 +129,12 @@ const forgetPassword = async (req, res) => {
     res.status(500).json({ success: false, msg: "Internal Server Error", error });
   }
 };
-
 const resetPassword = async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
-
   try {
     const { Email } = jwt.verify(token, JWT_SECRET);
     const hashedPassword = await bcrypt.hash(password, 10);
-
     await authModel.updateOne({ Email }, { Password: hashedPassword });
 
     res.status(200).json({ success: true, msg: "Password reset successful." });
