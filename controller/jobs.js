@@ -38,7 +38,8 @@ const jobsModel = require('../models/jobs.moodels');
                 totalJobs,
                 currentPage: Number(page),
                 totalPages: Math.ceil(totalJobs / limit),
-                jobs,            });
+                jobs,
+            });
         } catch (error) {
             res.status(500).json({
                 success: false,

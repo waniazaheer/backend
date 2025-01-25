@@ -3,7 +3,6 @@ const authModel = require('../models/Auth.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-
 const JWT_SECRET = process.env.JWT_SECRET;
 const transporter = nodemailer.createTransport({
   service: "Gmail",
@@ -12,18 +11,14 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASSWORD,
   },
 });
-
 const register = async (req, res) => {
   try {
     const { Name, Email, Phone_num, Password, image } = req.body;
-
     const existedUser = await authModel.findOne({ Email });
     if (existedUser) {
       return res.status(409).json({ success: false, msg: "Email already exists" });
     }
-
     const hashedPassword = await bcrypt.hash(Password, 10);
-
     const newUser = await authModel.create({
       Name,
       Email,
@@ -31,9 +26,7 @@ const register = async (req, res) => {
       Password: hashedPassword,
       image,
     });
-
     const token = jwt.sign({ Email: newUser.Email, id: newUser._id }, JWT_SECRET, { expiresIn: '12h' });
-
     res.status(201).json({ 
       success: true, 
       user: newUser,
@@ -48,21 +41,17 @@ const register = async (req, res) => {
        });
   }
 };
-
 const login = async (req, res) => {
   try {
     const { Email, Password } = req.body;
-
     const existedUser = await authModel.findOne({ Email });
     if (!existedUser) {
       return res.status(404).json({ success: false, msg: "User not found. Please register first." });
     }
-
     const isPasswordValid = await bcrypt.compare(Password, existedUser.Password);
     if (!isPasswordValid) {
       return res.status(400).json({ success: false, msg: "Invalid credentials" });
     }
-
     const token = jwt.sign({ Email: existedUser.Email, id: existedUser._id }, JWT_SECRET, { expiresIn: '12h' });
 
     res.status(200).json({
@@ -76,7 +65,6 @@ const login = async (req, res) => {
     res.status(500).json({ success: false, msg: "Internal Server Error", error });
   }
 };
-
 const getAuth = async (req, res) => {
   try {
     const users = await authModel.find();
@@ -86,7 +74,6 @@ const getAuth = async (req, res) => {
     res.status(500).json({ success: false, msg: "Internal Server Error", error });
   }
 };
-
 const deleteAuth = async (req, res) => {
   const { id } = req.params;
   try {

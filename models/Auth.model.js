@@ -23,6 +23,11 @@ const authSchema = new mongoose.Schema({
         type:String,
         // require:[true,'image is required filed ']
     },
+    role:{
+        type:String,
+        enum:['user', 'admin'],
+        default:'user'
+    }
 })
 const authModel = mongoose.model('auth',authSchema)
 module.exports = authModel
